@@ -3,19 +3,21 @@ using System.Linq;
 using NServiceBus;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using NServiceBus.Logging;
 
 public class SubmitOrderHandler :
     IHandleMessages<SubmitOrder>
 {
-    static ILog log = LogManager.GetLogger<SubmitOrderHandler>();
     ReceiverDataContext receiverDataContext;
     private readonly ShipmentDataContext shipmentDataContext;
+    private readonly ILogger<SubmitOrderHandler> logger;
 
-    public SubmitOrderHandler(ReceiverDataContext receiverDataContext, ShipmentDataContext shipmentDataContext)
+    public SubmitOrderHandler(ReceiverDataContext receiverDataContext, ShipmentDataContext shipmentDataContext, ILogger<SubmitOrderHandler> logger)
     {
         this.receiverDataContext = receiverDataContext;
         this.shipmentDataContext = shipmentDataContext;
+        this.logger = logger;
     }
 
     public async Task Handle(SubmitOrder message, IMessageHandlerContext context)
@@ -40,7 +42,7 @@ public class SubmitOrderHandler :
         shipmentDataContext.Shipments.Add(shipment);
         await shipmentDataContext.SaveChangesAsync(context.CancellationToken);
 
-        log.Info($"Order {message.OrderId} worth {message.Value} created.");
+        logger.LogInformation($"Order {message.OrderId} worth {message.Value} created.");
 
         await context.SendLocal(new CompleteOrder { OrderId = message.OrderId });
         await context.SendLocal(new CompleteOrder { OrderId = message.OrderId });

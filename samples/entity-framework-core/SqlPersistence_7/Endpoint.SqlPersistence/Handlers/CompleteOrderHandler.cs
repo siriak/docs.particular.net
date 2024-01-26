@@ -1,17 +1,18 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using NServiceBus;
-using NServiceBus.Logging;
 
 public class CompleteOrderHandler
     : IHandleMessages<CompleteOrder>
 {
-    static ILog log = LogManager.GetLogger<CompleteOrderHandler>();
     ReceiverDataContext dataContext;
+    private readonly ILogger<CompleteOrder> logger;
 
-    public CompleteOrderHandler(ReceiverDataContext dataContext)
+    public CompleteOrderHandler(ReceiverDataContext dataContext, ILogger<CompleteOrder> logger)
     {
         this.dataContext = dataContext;
+        this.logger = logger;
     }
 
     public async Task Handle(CompleteOrder message, IMessageHandlerContext context)
@@ -21,6 +22,6 @@ public class CompleteOrderHandler
         var shipment = await dataContext.Shipments.FirstAsync(x => x.Order.OrderId == order.OrderId, context.CancellationToken)
             .ConfigureAwait(false);
 
-        log.Info($"Completing order {order.OrderId} worth {order.Value} by shipping to {shipment.Location}.");
+        logger.LogInformation($"Completing order {order.OrderId} worth {order.Value} by shipping to {shipment.Location}.");
     }
 }

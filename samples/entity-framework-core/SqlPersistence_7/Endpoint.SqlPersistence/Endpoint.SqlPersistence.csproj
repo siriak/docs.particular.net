@@ -9,6 +9,7 @@
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.*" />
+    <PackageReference Include="NServiceBus.Extensions.Hosting" Version="2.0.0" />
     <PackageReference Include="NServiceBus.Newtonsoft.Json" Version="3.0.0" />
     <PackageReference Include="NServiceBus.Persistence.Sql" Version="7.0.4" />
     <PackageReference Include="NServiceBus.Transport.AzureServiceBus" Version="3.2.2" />
