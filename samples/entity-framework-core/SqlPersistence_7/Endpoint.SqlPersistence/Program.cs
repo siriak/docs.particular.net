@@ -28,7 +28,10 @@ class Program
         endpointConfiguration.EnableInstallers();
         endpointConfiguration.SendFailedMessagesTo("error");
 
-        endpointConfiguration.UseTransport(new AzureServiceBusTransport(Environment.GetEnvironmentVariable("AZURE_SERVICEBUS_CONNECTION_STRING")));
+        endpointConfiguration.UseTransport(new AzureServiceBusTransport(Environment.GetEnvironmentVariable("AZURE_SERVICEBUS_CONNECTION_STRING"))
+        {
+            TransportTransactionMode = TransportTransactionMode.SendsAtomicWithReceive
+        });
 
         endpointConfiguration.UseSerialization<NewtonsoftJsonSerializer>();
 
