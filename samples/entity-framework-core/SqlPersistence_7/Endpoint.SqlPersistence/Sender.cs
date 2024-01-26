@@ -28,7 +28,7 @@ public class Sender
                 }
                 var orderId = new string(Enumerable.Range(0, 4).Select(x => letters[random.Next(letters.Length)]).ToArray());
                 var shipTo = locations[random.Next(locations.Length)];
-                var orderSubmitted = new OrderSubmitted
+                var orderSubmitted = new SubmitOrder
                 {
                     OrderId = orderId,
                     Value = random.Next(100),

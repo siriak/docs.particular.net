@@ -1,6 +1,6 @@
 ﻿using NServiceBus;
 
-public class OrderSubmitted :
+public class SubmitOrder :
     IMessage
 {
     public string OrderId { get; set; }
