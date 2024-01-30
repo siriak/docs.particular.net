@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using NServiceBus;
 using System;
+using Endpoint.SqlPersistence.Miscellaneous;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -14,12 +15,27 @@ var databaseConnectionString =
 Console.Title = "Samples.EntityFrameworkUnitOfWork.SQL";
 
 await SqlHelper.EnsureDatabaseExists(databaseConnectionString);
+await SqlHelper.EnsureDatabaseExists(sqlConnectionString);
+
+await using (var shipmentDataContext = new ShipmentDataContext(new DbContextOptionsBuilder<ShipmentDataContext>()
+                 .UseSqlServer(sqlConnectionString)
+                 .Options))
+{
+    await shipmentDataContext.Database.EnsureCreatedAsync().ConfigureAwait(false);
+}
 
 await using (var receiverDataContext = new ReceiverDataContext(new DbContextOptionsBuilder<ReceiverDataContext>()
                  .UseSqlServer(sqlConnectionString)
                  .Options))
 {
     await receiverDataContext.Database.EnsureCreatedAsync().ConfigureAwait(false);
+}
+
+await using (var applicationDbContext = new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext>()
+                 .UseSqlServer(sqlConnectionString)
+                 .Options))
+{
+    await applicationDbContext.Database.EnsureCreatedAsync().ConfigureAwait(false);
 }
 
 var hostBuilder = new HostBuilder();
@@ -52,6 +68,11 @@ hostBuilder.UseNServiceBus(_ =>
 });
 hostBuilder.ConfigureServices(services =>
 {
+    services
+        .AddIdentityCore<ApplicationUser>()
+        .AddEntityFrameworkStores<ApplicationDbContext>();
+    services.AddDbContext<ApplicationDbContext>(config => config.UseSqlServer(sqlConnectionString));
+
     services.AddHostedService<Sender>();
 });
 
