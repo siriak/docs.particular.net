@@ -41,6 +41,15 @@ await using (var applicationDbContext = new ApplicationDbContext(new DbContextOp
 var hostBuilder = new HostBuilder();
 hostBuilder.ConfigureLogging(logging => logging.AddConsole());
 hostBuilder.UseConsoleLifetime();
+hostBuilder.ConfigureServices(services =>
+{
+    services.AddDbContext<ReceiverDataContext>(config => config.UseSqlServer(sqlConnectionString));
+    services.AddDbContext<ShipmentDataContext>(config => config.UseSqlServer(sqlConnectionString));
+    services
+        .AddIdentityCore<ApplicationUser>()
+        .AddEntityFrameworkStores<ApplicationDbContext>();
+    services.AddDbContext<ApplicationDbContext>(config => config.UseSqlServer(sqlConnectionString));
+});
 hostBuilder.UseNServiceBus(_ =>
 {
     var endpointConfiguration = new EndpointConfiguration("Samples.EntityFrameworkUnitOfWork.SQL");
@@ -58,21 +67,10 @@ hostBuilder.UseNServiceBus(_ =>
     var persistence = endpointConfiguration.UsePersistence<SqlPersistence>();
     persistence.ConnectionBuilder(() => new SqlConnection(databaseConnectionString));
     var dialect = persistence.SqlDialect<SqlDialect.MsSqlServer>();
-
-    endpointConfiguration.RegisterComponents(services =>
-    {
-        services.AddDbContext<ReceiverDataContext>(config => config.UseSqlServer(sqlConnectionString));
-        services.AddDbContext<ShipmentDataContext>(config => config.UseSqlServer(sqlConnectionString));
-    });
     return endpointConfiguration;
 });
 hostBuilder.ConfigureServices(services =>
 {
-    services
-        .AddIdentityCore<ApplicationUser>()
-        .AddEntityFrameworkStores<ApplicationDbContext>();
-    services.AddDbContext<ApplicationDbContext>(config => config.UseSqlServer(sqlConnectionString));
-
     services.AddHostedService<Sender>();
 });
 
