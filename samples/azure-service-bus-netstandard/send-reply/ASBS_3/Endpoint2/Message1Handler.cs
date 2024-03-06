@@ -3,11 +3,11 @@ using NServiceBus;
 using NServiceBus.Logging;
 
 public class Message1Handler :
-    IHandleMessages<Message1>
+    IHandleMessages<IMessage1>
 {
     static ILog log = LogManager.GetLogger<Message1Handler>();
 
-    public Task Handle(Message1 message, IMessageHandlerContext context)
+    public Task Handle(IMessage1 message, IMessageHandlerContext context)
     {
         log.Info($"Received Message1: {message.Property}");
 
@@ -15,6 +15,6 @@ public class Message1Handler :
         {
             Property = "Hello from Endpoint2"
         };
-        return context.Reply(message2);
+        return context.Publish(message2);
     }
 }

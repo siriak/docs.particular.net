@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using NServiceBus;
+using Shared;
 
 class Program
 {
@@ -23,6 +24,13 @@ class Program
         endpointConfiguration.UseTransport(transport);
         endpointConfiguration.UseSerialization<SystemJsonSerializer>();
 
+        // temporarily disable auto subscription only for those message types
+        var autoSubscribeSettings = endpointConfiguration.AutoSubscribe();
+        autoSubscribeSettings.DisableFor<IMessage1>();
+        autoSubscribeSettings.DisableFor<IMessage2>();
+
+        endpointConfiguration.Pipeline.Register(new OutgoingBehavior(), "Bla");
+
         #endregion
 
         var endpointInstance = await Endpoint.Start(endpointConfiguration)
@@ -44,7 +52,7 @@ class Program
             {
                 Property = "Hello from Endpoint1"
             };
-            await endpointInstance.Send("Samples.ASBS.SendReply.Endpoint2", message)
+            await endpointInstance.Publish(message)
                 .ConfigureAwait(false);
             Console.WriteLine("Message1 sent");
         }

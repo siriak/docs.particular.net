@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
 using NServiceBus;
+using NServiceBus.Features;
+using NServiceBus.Pipeline;
+using Shared;
 
 class Program
 {
@@ -10,7 +13,6 @@ class Program
 
         var endpointConfiguration = new EndpointConfiguration("Samples.ASBS.SendReply.Endpoint2");
         endpointConfiguration.EnableInstallers();
-
 
         var connectionString = Environment.GetEnvironmentVariable("AzureServiceBus_ConnectionString");
         if (string.IsNullOrWhiteSpace(connectionString))
@@ -22,6 +24,13 @@ class Program
         endpointConfiguration.UseTransport(transport);
         endpointConfiguration.UseSerialization<SystemJsonSerializer>();
 
+        // temporarily disable auto subscription only for those message types
+        var autoSubscribeSettings = endpointConfiguration.AutoSubscribe();
+        autoSubscribeSettings.DisableFor<IMessage1>();
+        autoSubscribeSettings.DisableFor<IMessage2>();
+
+        endpointConfiguration.Pipeline.Register(new OutgoingBehavior(), "Bla");
+
         var endpointInstance = await Endpoint.Start(endpointConfiguration)
             .ConfigureAwait(false);
 
@@ -31,4 +40,6 @@ class Program
         await endpointInstance.Stop()
             .ConfigureAwait(false);
     }
+
+
 }
