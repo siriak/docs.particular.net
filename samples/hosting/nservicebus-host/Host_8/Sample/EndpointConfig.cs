@@ -10,7 +10,8 @@ public class EndpointConfig :
 {
     public void Customize(EndpointConfiguration endpointConfiguration)
     {
-        endpointConfiguration.EnableInstallers();
+        endpointConfiguration.EnableInstallers(); // Do NOT use this in production! Only if installers need always be run.
+
         endpointConfiguration.UsePersistence<LearningPersistence>();
         endpointConfiguration.UseTransport<LearningTransport>();
     }
