@@ -6,8 +6,29 @@ reviewed: 2024-07-02
 ServiceControl Monitoring instances are deployed using the [`particular/servicecontrol-monitoring` image](https://hub.docker.com/r/particular/servicecontrol-monitoring), as shown in this minimal example using `docker run`:
 
 ```shell
-docker run -d -p 33633:33633 -e TRANSPORTTYPE=RabbitMQ.QuorumConventionalRouting -e CONNECTIONSTRING="host=host.docker.internal" particular/servicecontrol-monitoring:latest
+docker run -d -p 33633:33633 \
+    -e TRANSPORTTYPE=RabbitMQ.QuorumConventionalRouting \
+    -e CONNECTIONSTRING="host=host.docker.internal" \
+    particular/servicecontrol-monitoring:latest
 ```
+## Initial setup
+
+Before running the container image normally, it must be run in setup mode to create the required message queues.
+
+The container image will run in setup mode by adding the `--setup` argument. For example:
+
+```shell
+# Using docker run
+docker run --rm \
+    {EnvironmentVariables}
+    particular/servicecontrol-monitoring --setup
+```
+
+Depending on the requirements of the message transport, setup mode may require different connection settings that have permissions to create queues, which are not necessary during non-setup runtime.
+
+After setup is complete, the container will exit, and the `--rm` (or equivalent) option may be used to automatically remove the container.
+
+The initial setup should be repeated any time the container is updated to a new version.
 
 ## Required settings
 
