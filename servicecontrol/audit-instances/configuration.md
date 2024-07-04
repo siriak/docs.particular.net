@@ -227,6 +227,7 @@ Valid range is `0` to `10800` (3 Hours).
 
 Setting the value to `0` will disable the expiration process. This is not recommended and it is only provided for fault finding.
 
+#if-version [,5)
 ### ServiceControl.Audit/ExpirationProcessBatchSize
 
 This controls the batch size used when deleting audit messages that have exceeded the audit retention period.
@@ -243,19 +244,20 @@ This controls the batch size used when deleting audit messages that have exceede
 
 The minimum allowed value for this setting is `10240`; there is no hard-coded maximum as this is dependent on system performance.
 
+#end-if
 ### ServiceControl.Audit/AuditRetentionPeriod
 
-The period to keep an audit message before it is deleted.
+The grace period to keep an audit message before it is deleted.
 
 | Context | Name |
 | --- | --- |
 | **Environment variable** | `SERVICECONTROL_AUDIT_AUDITRETENTIONPERIOD` |
 | **App config key** | `ServiceControl.Audit/AuditRetentionPeriod` |
-| **SCMU field** | `Audit retention period` |
+| **SCMU field** | `AUDIT RETENTION PERIOD` |
 
 | Type | Default value |
 | --- | --- |
-| timespan | None |
+| timespan | None (required) |
 
 Valid range for this setting is from 1 hour to 365 days.
 
@@ -264,19 +266,23 @@ Valid range for this setting is from 1 hour to 365 days.
 
 ## Performance tuning
 
-### ServiceControl.Audit/MaxBodySizeToStore
+### ServiceControl.Audit/MaximumConcurrencyLevel
 
-This setting specifies the upper limit on body size, in bytes, to be configured.
+The maximum number of messages that can be concurrently pulled from the message transport.
+<!-- TODO: The following stuff is very detailed for a settings page. Should this be moved to a performance doc? -->
+It is important that the maximum concurrency level be incremented only if there are no verified bottlenecks in CPU, RAM, network I/O, storage I/O, and storage index lag. Higher numbers can result in faster audit message ingestion, but also consume more server resources, and can increase costs in the case of cloud transports that have associated per-operation costs. In some cases, the ingestion rate can be too high and the underlying database cannot keep up with indexing the new messages. In this case, consider lowering the maximum concurrency level to a value that still allows a suitable ingestion rate while easing the pressure on the database.
+
+Cloud transports with higher latency can benefit from higher concurrency values, but costs can increase as well. Local transports using fast local SSD drives and low latency do not benefit as much.
 
 | Context | Name |
 | --- | --- |
-| **Environment variable** | `SERVICECONTROL_AUDIT_MAXBODYSIZETOSTORE` |
-| **App config key** | `ServiceControl.Audit/MaxBodySizeToStore` |
+| **Environment variable** | `SERVICECONTROL_AUDIT_MAXIMUMCONCURRENCYLEVEL` |
+| **App config key** | `ServiceControl.Audit/MaximumConcurrencyLevel` |
 | **SCMU field** | N/A |
 
 | Type | Default value |
 | --- | --- |
-| int | `102400` (100Kb) |
+| int | `32` |
 
 ### ServiceControl.Audit/HttpDefaultConnectionLimit
 
@@ -294,33 +300,23 @@ The maximum number of concurrent connections allowed by ServiceControl. When wor
 
 <!-- //TODO: Really? Not an int? -->
 
-### ServiceControl.Audit/MaximumConcurrencyLevel
+### ServiceControl.Audit/MaxBodySizeToStore
 
-The maximum number of messages that can be concurrently pulled from the message transport.
-
-It is important that the maximum concurrency level be incremented only if there are no verified bottlenecks in CPU, RAM, network I/O, storage I/O, and storage index lag. Higher numbers can result in faster audit message ingestion, but also consume more server resources, and can increase costs in the case of cloud transports that have associated per-operation costs. In some cases, the ingestion rate can be too high and the underlying database cannot keep up with indexing the new messages. In this case, consider lowering the maximum concurrency level to a value that still allows a suitable ingestion rate while easing the pressure on the database.
-
-Cloud transports with higher latency can benefit from higher concurrency values, but costs can increase as well. Local transports using fast local SSD drives and low latency do not benefit as much.
+This setting specifies the upper limit on body size, in bytes, to be configured.
 
 | Context | Name |
 | --- | --- |
-| **Environment variable** | `SERVICECONTROL_AUDIT_MAXIMUMCONCURRENCYLEVEL` |
-| **App config key** | `ServiceControl.Audit/MaximumConcurrencyLevel` |
+| **Environment variable** | `SERVICECONTROL_AUDIT_MAXBODYSIZETOSTORE` |
+| **App config key** | `ServiceControl.Audit/MaxBodySizeToStore` |
 | **SCMU field** | N/A |
 
 | Type | Default value |
 | --- | --- |
-#if-version [4.12,)
-| int | `32` |
-#end-if
-#if-version [,4.12)
-| int | `10` |
-#end-if
+| int | `102400` (100Kb) |
 
-#if-version [4.17,)
 ### ServiceControl.Audit/EnableFullTextSearchOnBodies
 
-Use this setting to configure whether the bodies of processed messages should be full-text indexed for searching.
+Use this setting to configure whether the bodies of processed audit messages should be full-text indexed for searching.
 
 | Context | Name |
 | --- | --- |
@@ -333,10 +329,9 @@ Use this setting to configure whether the bodies of processed messages should be
 | bool | `true` |
 
 > [!NOTE]
-> If the audit instance uses RavenDB 5 persistence (available starting 4.26.0), changing the full-text search setting will cause indexes to be redeployed and rebuilt. Depending on the number of documents stored, this operation might take a long time and search results won't be available until completed.
+> Changing the full-text search setting will cause indexes to be redeployed and rebuilt. Depending on the number of documents stored, this operation might take a long time and search results won't be available until completed.
 
-#end-if
-#if-version [5.0.6,)
+#if-version [5,)
 ### ServiceControl.Audit/BulkInsertCommitTimeoutInSeconds
 
 Configures the maximum duration for processing a batch of audited messages.
@@ -362,9 +357,9 @@ The transport type to run ServiceControl with.
 
 | Context | Name |
 | --- | --- |
-| **Environment variable** | `SERVICECONTROL_AUDIT_TRANSPORTTYPE` |
+| **Environment variable** | `SERVICECONTROL_AUDIT_TRANSPORTTYPE` or `TRANSPORTTYPE` |
 | **App config key** | `ServiceControl.Audit/TransportType` |
-| **SCMU field** | `Transport` |
+| **SCMU field** | `TRANSPORT` |
 
 | Type | Default value |
 | --- | --- |
@@ -374,13 +369,13 @@ Valid values are documented in the [ServiceControl transport configuration docum
 
 ### NServiceBus/Transport
 
-The connection string for the transport.
+The connection string for the transport. This setting must be entered in the `connectionStrings` section of the configuration file when configured using the app config.
 
 | Context | Name |
 | --- | --- |
-| **Environment variable** | `NSERVICEBUS_TRANSPORT` |
+| **Environment variable** | `SERVICECONTROL_AUDIT_CONNECTIONSTRING` OR `CONNECTIONSTRING` |
 | **App config key** | `NServiceBus/Transport` in `connectionStrings` |
-| **SCMU field** | `Connection String` |
+| **SCMU field** | `TRANSPORT CONNECTION STRING` |
 
 | Type | Default value |
 | --- | --- |
@@ -390,38 +385,21 @@ Valid values are documented in the [ServiceControl transport configuration docum
 
 ### ServiceBus/AuditQueue
 
-The name of the audit queue to injest messages from.
+The name of the audit queue to ingest messages from.
 
 | Context | Name |
 | --- | --- |
 | **Environment variable** | `SERVICEBUS_AUDITQUEUE` |
 | **App config key** | `ServiceBus/AuditQueue` |
-| **SCMU field** | `Audit Queue` |
+| **SCMU field** | `AUDIT QUEUE NAME` |
 
 | Type | Default value |
 | --- | --- |
 | string | `audit` |
 
-### ServiceBus/AuditLogQueue
-
-The audit queue name to use for forwarding audit messages. This works only if `ServiceControl.Audit/ForwardAuditMessages` is true.
-
-| Context | Name |
-| --- | --- |
-| **Environment variable** | `SERVICEBUS_AUDITLOGQUEUE` |
-| **App config key** | `ServiceBus/AuditLogQueue` |
-| **SCMU field** | `Audit Log Queue` |
-
-| Type | Default value |
-| --- | --- |
-| string | `<AuditQueue>.log` |
-
-> [!NOTE]
-> Changing the configuration file or environment value directly will not result in the queue being created. If you are using the ServiceControl Management utility to manage your ServiceControl audit instance changing the value will create the forwarding queue if it has not been created. <!-- //TODO: init containers, is there a powershell equivalent? -->
-
 ### ServiceControl.Audit/ForwardAuditMessages
 
-Use this setting to configure whether processed audit messages are forwarded to another queue or not. This queue is known as the Audit Forwarding Queue.
+Use this setting to configure whether processed audit messages are forwarded to another queue or not. This entry should be set to `false` if there is no external process reading messages from the [`ServiceBus/AuditLogQueue`]()<!-- TODO: Add anchor link -->.
 
 | Context | Name |
 | --- | --- |
@@ -431,7 +409,24 @@ Use this setting to configure whether processed audit messages are forwarded to 
 
 | Type | Default value |
 | --- | --- |
-| bool | `false` |
+| bool | `false` (Off) |
+
+### ServiceBus/AuditLogQueue
+
+The audit queue name to use for forwarding audit messages. This setting is ignored unless `ServiceControl.Audit/ForwardAuditMessages` is enabled.
+
+| Context | Name |
+| --- | --- |
+| **Environment variable** | `SERVICEBUS_AUDITLOGQUEUE` |
+| **App config key** | `ServiceBus/AuditLogQueue` |
+| **SCMU field** | `AUDIT FORWARDING QUEUE NAME` |
+
+| Type | Default value |
+| --- | --- |
+| string | `<AuditQueue>.log` |
+
+> [!NOTE]
+> Changing the configuration file or environment value directly will not result in the queue being created. If you are using the ServiceControl Management utility to manage your ServiceControl audit instance changing the value will create the forwarding queue if it has not been created. <!-- //TODO: init containers, is there a powershell equivalent? -->
 
 ### ServiceControl.Audit/ServiceControlQueueAddress
 
