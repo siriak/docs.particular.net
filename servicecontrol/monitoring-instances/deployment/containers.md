@@ -60,7 +60,7 @@ Not all settings are relevant to audit instances running in a container. For exa
 
 ## Upgrading
 
-A Monitoring instance is upgraded by removing the container for the old version and replacing it with a container built using the new version. However, the container should be run in [setup mode](#initial-setup) each time it is upgraded. For example:
+A ServiceControl monitoring instance is upgraded by removing the container for the old version and replacing it with a container built using the new version. However, the container should be run in [setup mode](#initial-setup) each time it is upgraded. For example:
 
 ```shell
 docker stop monitoring

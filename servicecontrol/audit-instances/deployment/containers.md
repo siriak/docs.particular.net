@@ -43,7 +43,7 @@ The following environment settings are required to run a ServiceControl audit in
 
 ## Ports
 
-`44444` is the canonical port exposed by the monitoring instance API within the container, though this port can be mapped to any desired external port.
+`44444` is the canonical port exposed by the audit instance API within the container, though this port can be mapped to any desired external port.
 
 ## Volumes
 
@@ -61,7 +61,7 @@ Not all settings are relevant to audit instances running in a container. For exa
 
 ## Upgrading
 
-A Monitoring instance is upgraded by removing the container for the old version and replacing it with a container built using the new version. However, the container should be run in [setup mode](#initial-setup) each time it is upgraded. For example:
+An ServiceControl audit instance is upgraded by removing the container for the old version and replacing it with a container built using the new version. However, the container should be run in [setup mode](#initial-setup) each time it is upgraded. For example:
 
 ```shell
 docker stop audit
