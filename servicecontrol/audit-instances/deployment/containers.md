@@ -1,87 +1,71 @@
 ---
 title: Deploying ServiceControl Audit instances using containers
-reviewed: 2024-06-11
+reviewed: 2024-07-08
 component: ServiceControl
+versions: '[5.3, )'
 ---
 
-ServiceControl audit instances can be run as a container. They are hosted on the Docker hub. https://hub.docker.com/u/particular
+ServiceControl Audit instances are deployed using the [`particular/servicecontrol-audit` image](https://hub.docker.com/r/particular/servicecontrol-audit), as shown in this minimal example using `docker run`:
 
-## Basic usage
+```shell
+docker run -d -p 44444:44444 \
+    -e TRANSPORTTYPE=RabbitMQ.QuorumConventionalRouting \
+    -e CONNECTIONSTRING="host=host.docker.internal" \
+    particular/servicecontrol-audit:latest
+```
+## Initial setup
 
-```bash
-docker run -e TRANSPORTTYPE=ServiceControl.Transports.Learning particular/servicecontrol-audit:latest
+Before running the container image normally, it must be run in setup mode to create the required message queues.
+
+The container image will run in setup mode by adding the `--setup` argument. For example:
+
+```shell
+# Using docker run
+docker run --rm {OPTIONS} particular/servicecontrol-audit --setup
 ```
 
-## Dependent Infrastructure
+Depending on the requirements of the message transport, setup mode may require different connection settings that have permissions to create queues, which are not necessary during non-setup runtime.
 
-### RavenDB
+After setup is complete, the container will exit, and the `--rm` (or equivalent) option may be used to automatically remove the container.
 
-include: ravendb-dependency
+The initial setup should be repeated any time the container is [updated to a new version](#upgrading).
 
-### Error instance
+## Required settings
 
-ServiceControl audit requires an error instance to connect to.
+The following environment settings are required to run a ServiceControl audit instance:
 
-Example compose file:
+| Environment Variable | Description |
+|-|-|
+| `TRANSPORTTYPE` | Determines the message transport used to communicate with message endpoints. See [TODO]() for valid TransportType values. |
+| `CONNECTIONSTRING` | Provides the connection information to connect to the chosen transport. The form of this connection string is different for every message transport. See [ServiceControl transport support](/servicecontrol/transports.md) for more details on options available to each message transport. |
+| `RAVENDB_CONNECTIONSTRING` | Provides the URL to connect to the [database container](/servicecontrol/ravendb/deployment/containers.md) that stores the audit instance's data. |
+| `PARTICULARSOFTWARE_LICENSE` | The Particular Software license. The environment variable should contain the full multi-line contents of the license file. |
 
-```yaml
-services:
-  audit:
-  error:
-```
+## Ports
 
-## Required environment variables
+`44444` is the canonical port exposed by the monitoring instance API within the container, though this port can be mapped to any desired external port.
 
-| Variable | |
-| -- | -- |
-| | |
+## Volumes
 
-See settings for other configuration options that can be set via environment variables.
+The Audit instance is stateless and does not require any mounted volumes.
 
-## Running in production
+## Additional settings
 
-The one volume needed. Client certificate. Could have settings file. Could have license file.
+Additional optional settings are documented in [Audit Instance Configuration Settings](/servicecontrol/audit-instances/configuration.md) which describes all available settings, allowed values, and the environment variable keys used to configure the container.
 
-## Tagging
+When using tools such as Docker Compose that can share environment information between many containers, the prefix `SERVICECONTROL_AUDIT_` can be dropped from an environment variable name, and the value will still be understood by the container. This facilitates sharing values such as `TRANSPORTTYPE` when all instances will be configured with the same values.
 
-ServiceControl audit instances on Docker Hub are tagged as follows:
+In the event of a naming collision, a fully qualified key such as `SERVICECONTROL_AUDIT_TRANSPORTTYPE` will be preferred over the shared `TRANSPORTTYPE` variant.
 
-### Latest
-
-The latest pushed version number of ServiceControl will be tagged as `:latest`.
-
-### Major
-
-The latest pushed version number within a given major will be tagged with the major version number: e.g. version `5.3.2` will be tagged with `:5`. This allows you to lock in a major version avoiding any breaking changes but still get any critical patch releases. See the Support Policy.
-
-### Version
-
-Every image uploaded will be tagged with the release version number, e.g. `:5.3.2`.
-
-## Init containers
-
-The `init` containers are used to create or upgrade the infrastructure required for ServiceControl. They are based on the [Kubernetes `init` containers](https://kubernetes.io/docs/concepts/workloads/pods/init-containers/). Once the `init` container has been run, it will shut down and the `runtime` container can be run.
-
-`Init` containers are identical to the corresponding `runtime` image but with added entry point arguments (`--setup`). It is also possible to use the `runtime` image, override the entry point and add this argument to achieve the same goal.
-
-```bash
-docker run -rm blah blah --setup
-```
+Not all settings are relevant to audit instances running in a container. For example, HTTP hostname and port use standard values inside the container, and mapped to real hosts and ports by infrastructure external to the container. Be sure to check the documentation for each configuration setting carefully to ensure it is relevant in a container context.
 
 ## Upgrading
 
-```bash
+A Monitoring instance is upgraded by removing the container for the old version and replacing it with a container built using the new version. However, the container should be run in [setup mode](#initial-setup) each time it is upgraded. For example:
+
+```shell
 docker stop audit
 docker rm audit
-docker run servicecontrol-audit:latest
-```
-
-## Maintenance mode
-
-```bash
-docker stop audit
-```
-
-```bash
-docker start audit
+docker run -rm {OPTIONS} particular/servicecontrol-audit --setup
+docker run -d {OPTIONS} particular/servicecontrol-audit
 ```
