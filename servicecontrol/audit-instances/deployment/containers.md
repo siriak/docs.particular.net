@@ -11,6 +11,7 @@ ServiceControl Audit instances are deployed using the [`particular/servicecontro
 docker run -d -p 44444:44444 \
     -e TRANSPORTTYPE=RabbitMQ.QuorumConventionalRouting \
     -e CONNECTIONSTRING="host=host.docker.internal" \
+    -e RAVENDB_CONNECTIONSTRING="http://host.docker.internal:8080" \
     particular/servicecontrol-audit:latest
 ```
 ## Initial setup
@@ -38,7 +39,7 @@ The following environment settings are required to run a ServiceControl audit in
 |-|-|
 | `TRANSPORTTYPE` | Determines the message transport used to communicate with message endpoints. See [TODO]() for valid TransportType values. |
 | `CONNECTIONSTRING` | Provides the connection information to connect to the chosen transport. The form of this connection string is different for every message transport. See [ServiceControl transport support](/servicecontrol/transports.md) for more details on options available to each message transport. |
-| `RAVENDB_CONNECTIONSTRING` | Provides the URL to connect to the [database container](/servicecontrol/ravendb/deployment/containers.md) that stores the audit instance's data. |
+| `RAVENDB_CONNECTIONSTRING` | Provides the URL to connect to the [database container](/servicecontrol/ravendb/deployment/containers.md) that stores the audit instance's data. The database container should be exclusive to the error instance, and not shared by any other ServiceControl instances. |
 | `PARTICULARSOFTWARE_LICENSE` | The Particular Software license. The environment variable should contain the full multi-line contents of the license file. |
 
 ## Ports
