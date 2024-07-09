@@ -69,6 +69,9 @@ An ServiceControl error instance is upgraded by removing the container for the o
 ```shell
 docker stop error
 docker rm error
-docker run -rm {OPTIONS} particular/servicecontrol --setup
-docker run -d {OPTIONS} particular/servicecontrol
+docker pull particular/servicecontrol:latest
+docker run -rm {OPTIONS} particular/servicecontrol:latest --setup
+docker run -d {OPTIONS} particular/servicecontrol:latest
 ```
+
+Note that Docker can cache the `latest` tag as well as the major/minor tags (such as `5` or `5.3`) unless the tag is pulled again. To be certain, use the full version tag.

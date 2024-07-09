@@ -65,6 +65,9 @@ A ServiceControl monitoring instance is upgraded by removing the container for t
 ```shell
 docker stop monitoring
 docker rm monitoring
-docker run -rm {OPTIONS} particular/servicecontrol-monitoring --setup
-docker run -d {OPTIONS} particular/servicecontrol-monitoring
+docker pull particular/servicecontrol-monitoring:latest
+docker run -rm {OPTIONS} particular/servicecontrol-monitoring:latest --setup
+docker run -d {OPTIONS} particular/servicecontrol-monitoring:latest
 ```
+
+Note that Docker can cache the `latest` tag as well as the major/minor tags (such as `5` or `5.3`) unless the tag is pulled again. To be certain, use the full version tag.

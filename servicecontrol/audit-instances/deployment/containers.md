@@ -67,6 +67,9 @@ An ServiceControl audit instance is upgraded by removing the container for the o
 ```shell
 docker stop audit
 docker rm audit
-docker run -rm {OPTIONS} particular/servicecontrol-audit --setup
-docker run -d {OPTIONS} particular/servicecontrol-audit
+docker pull particular/servicecontrol-audit:latest
+docker run -rm {OPTIONS} particular/servicecontrol-audit:latest --setup
+docker run -d {OPTIONS} particular/servicecontrol-audit:latest
 ```
+
+Note that Docker can cache the `latest` tag as well as the major/minor tags (such as `5` or `5.3`) unless the tag is pulled again. To be certain, use the full version tag.
