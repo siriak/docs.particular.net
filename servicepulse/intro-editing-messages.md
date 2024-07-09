@@ -1,20 +1,20 @@
 ---
 title:  Fixing malformed messages
-summary: Describes the concept of fixing and retrying malformed messages in ServicePulse
+summary: How to edit and retry malformed messages using ServicePulse
 component: ServicePulse
-reviewed: 2021-08-05
+reviewed: 2024-07-09
 ---
 
-If a message cannot be successfully retried it is possible to fix the malformed message prior to retrying it. Both the headers and the body of a message can be edited. This capability can be accessed when looking at an individual message.
+If a message cannot be processed due to content corruption it might be necessary to edit it's body and/or headers before scheduling a retry. ServicePulse enables this operation at the level of an individual message.
 
 ![Edit Malformed Messages](images/edit-message-details.png 'width=500')
 
-## Enabling the feature
+## Enabling message editing
 
 > [!CAUTION]
-> Editing malformed messages is a potentially destructive operation, which if used improperly can have consequences that affect the correctness of the system. If a malformed message is edited improperly, it could still be processed successfully, without any way to undo the effects. The possible effects of editing a malformed message are system-specific and ServicePulse is unable to determine if a potential edit operation is safe for the system. Currently there is no way to limit failed message editing only to certain security groups or to specific message types.
+> The message editing feature is currently considered experimental and is **disabled by default**. Currently there is no way to limit failed message editing only to certain security groups or to specific message types.
 >
-> System designers may prefer to disallow message editing in order to guarantee the correctness of the system. As a result, the message editing feature is currently considered experimental and is **disabled by default**.
+> Editing malformed messages is a potentially destructive operation, and used improperly can affect the correctness of the system. Once a message has been edited and successfully processed, there is no way to it's effects. The possible effects of editing and retrying a malformed message are system-specific and ServicePulse is unable to determine if a given edit operation is safe. 
 >
 > Before enabling the feature, carefully evaluate possible use cases for editing malformed messages and consider alternative solutions for those use cases such as [ServiceControl retry redirects](/samples/servicecontrol/fix-messages/), especially for use cases that are common and recurring. For help with alternatives for specific situations, contact [Particular Support](https://particular.net/support) for assistance.
 
